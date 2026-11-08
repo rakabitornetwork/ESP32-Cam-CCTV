@@ -120,10 +120,10 @@ export default function Index({ devices, plainToken, tokenDevice }) {
                                                     aria-label="Lokasi"
                                                 />
                                                 <div className="flex gap-4">
-                                                    <button type="submit" disabled={edit.processing} className="text-brand-700 hover:text-brand-600 disabled:opacity-50">
+                                                    <button type="submit" disabled={edit.processing} className="text-green-700 hover:text-green-800 disabled:opacity-50">
                                                         Simpan
                                                     </button>
-                                                    <button type="button" onClick={() => setEditingId(null)} className="text-gray-500 hover:text-gray-700">
+                                                    <button type="button" onClick={() => setEditingId(null)} className="text-gray-600 hover:text-gray-800">
                                                         Batal
                                                     </button>
                                                 </div>
@@ -135,10 +135,10 @@ export default function Index({ devices, plainToken, tokenDevice }) {
                                                 <p className="text-gray-500">{device.location || 'Lokasi belum diisi'}</p>
                                                 {canManage && (
                                                     <div className="mt-2 flex gap-4">
-                                                        <button type="button" onClick={() => startEdit(device)} className="text-brand-700 hover:text-brand-600">
+                                                        <button type="button" onClick={() => startEdit(device)} className="text-blue-700 hover:text-blue-800">
                                                             Ubah
                                                         </button>
-                                                        <button type="button" onClick={() => remove(device)} className="text-gray-500 hover:text-red-700">
+                                                        <button type="button" onClick={() => remove(device)} className="text-red-700 hover:text-red-800">
                                                             Hapus
                                                         </button>
                                                     </div>
