@@ -1,3 +1,4 @@
+import AdminNav from '@/Components/AdminNav';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatBytes, formatWhen } from '@/lib/format';
 import { Head, router } from '@inertiajs/react';
@@ -7,6 +8,7 @@ export default function Dashboard({ users, organizations, invoices }) {
         <AuthenticatedLayout header={<h2 className="text-xl font-semibold text-gray-800">Panel admin</h2>}>
             <Head title="Panel admin" />
             <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+                <AdminNav />
                 <section className="overflow-hidden rounded-lg bg-white shadow-sm">
                     <h3 className="border-b px-4 py-3 font-medium">Pengguna</h3>
                     <table className="min-w-full text-sm">

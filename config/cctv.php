@@ -14,4 +14,10 @@ return [
 
     'admin_password' => env('ADMIN_PASSWORD'),
 
+    'php_binary' => env('CCTV_PHP_BINARY') ?: PHP_BINARY,
+
+    'composer_binary' => env('CCTV_COMPOSER_BINARY') ?: 'composer',
+
+    'npm_binary' => env('CCTV_NPM_BINARY') ?: 'npm',
+
 ];

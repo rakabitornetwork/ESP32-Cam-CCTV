@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\UpdateController as AdminUpdateController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CaptureController;
 use App\Http\Controllers\DashboardController;
@@ -42,7 +43,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
 
-    Route::get('admin', AdminDashboardController::class)->middleware('admin')->name('admin.dashboard');
+    Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/', AdminDashboardController::class)->name('dashboard');
+        Route::get('pembaruan', [AdminUpdateController::class, 'show'])->name('update');
+        Route::post('pembaruan/periksa', [AdminUpdateController::class, 'check'])->name('update.check');
+        Route::post('pembaruan', [AdminUpdateController::class, 'apply'])->name('update.apply');
+    });
 });
 
 Route::middleware('auth')->group(function () {

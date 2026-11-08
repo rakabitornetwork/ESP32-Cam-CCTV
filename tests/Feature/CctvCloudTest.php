@@ -41,6 +41,21 @@ class CctvCloudTest extends TestCase
         [$user] = $this->owner();
 
         $this->actingAs($user)->get(route('admin.dashboard'))->assertForbidden();
+        $this->actingAs($user)->get(route('admin.update'))->assertForbidden();
+        $this->actingAs($user)->post(route('admin.update.apply'))->assertForbidden();
+    }
+
+    public function test_admin_can_open_the_update_page(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Organization::provisionFor($admin);
+
+        $this->actingAs($admin)->get(route('admin.update'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Admin/Update')
+                ->where('status.available', true)
+                ->where('status.branch', 'main'));
     }
 
     public function test_capture_uses_device_token_and_quota(): void
