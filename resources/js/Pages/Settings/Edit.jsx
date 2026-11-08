@@ -64,6 +64,16 @@ function LiveCam({ deviceId }) {
                     return;
                 }
                 const next = URL.createObjectURL(response.data);
+                const intact = await new Promise((resolve) => {
+                    const image = new Image();
+                    image.onload = () => resolve(true);
+                    image.onerror = () => resolve(false);
+                    image.src = next;
+                });
+                if (!intact || cancelled) {
+                    URL.revokeObjectURL(next);
+                    return;
+                }
                 if (frameUrl.current) {
                     URL.revokeObjectURL(frameUrl.current);
                 }

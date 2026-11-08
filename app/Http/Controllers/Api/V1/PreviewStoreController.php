@@ -19,12 +19,15 @@ class PreviewStoreController extends Controller
             abort(409, 'Pratinjau tidak diminta.');
         }
 
-        $stored = Storage::disk(config('cctv.disk', 'cctv'))->put(
-            $device->previewPath(),
-            $request->previewFile()->getContent(),
-        );
+        $bytes = $request->previewFile()->getContent();
+        $complete = str_starts_with($bytes, "\xFF\xD8") && str_ends_with($bytes, "\xFF\xD9");
+        abort_unless($complete, 422, 'Gambar tidak utuh.');
 
-        abort_unless($stored, 500, 'Gagal menyimpan pratinjau.');
+        $disk = Storage::disk(config('cctv.disk', 'cctv'));
+        $final = $device->previewPath();
+        $temporary = $final.'.tmp';
+        abort_unless($disk->put($temporary, $bytes), 500, 'Gagal menyimpan pratinjau.');
+        rename($disk->path($temporary), $disk->path($final));
 
         return response()->noContent();
     }

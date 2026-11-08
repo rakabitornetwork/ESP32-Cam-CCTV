@@ -318,6 +318,12 @@ class CctvCloudTest extends TestCase
             'image' => UploadedFile::fake()->image('live.jpg'),
         ])->assertNoContent();
 
+        $good = UploadedFile::fake()->image('live.jpg');
+        $cut = substr(file_get_contents($good->getRealPath()), 0, 32);
+        $this->withToken($token)->post('/api/v1/preview', [
+            'image' => UploadedFile::fake()->createWithContent('cut.jpg', $cut),
+        ])->assertStatus(422);
+
         $this->assertSame(0, $organization->storageQuota()->first()->fresh()->used_bytes);
 
         $this->actingAs($user)->get(route('settings.preview.show', $device))
