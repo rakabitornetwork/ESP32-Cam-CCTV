@@ -2,16 +2,17 @@
 
 use App\Http\Controllers\Admin\UpdateController as AdminUpdateController;
 use App\Http\Controllers\CaptureController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeviceController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route(auth()->check() ? 'captures.index' : 'login');
+    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('dashboard', fn () => redirect()->route('captures.index'))->name('dashboard');
+    Route::get('dashboard', DashboardController::class)->name('dashboard');
 
     Route::get('kamera', [DeviceController::class, 'index'])->name('devices.index');
     Route::post('kamera', [DeviceController::class, 'store'])->name('devices.store');

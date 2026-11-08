@@ -10,6 +10,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const links = [
+        { name: 'Dasbor', route: 'dashboard', active: route().current('dashboard') },
         { name: 'Kamera', route: 'devices.index', active: route().current('devices.index') },
         { name: 'Galeri', route: 'captures.index', active: route().current('captures.index') },
         ...(user?.is_admin
@@ -19,18 +20,18 @@ export default function AuthenticatedLayout({ header, children }) {
 
     return (
         <div className="min-h-screen bg-gray-100">
-            <nav className="relative border-b border-gray-100 bg-white">
+            <nav className="nav-bar relative border-b border-teal-950/40">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href={route('captures.index')}>
-                                    <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
+                                <Link href={route('dashboard')}>
+                                    <ApplicationLogo className="block h-9 w-auto fill-current text-white" />
                                 </Link>
                             </div>
                             <div className="hidden sm:-my-px sm:ms-8 sm:flex sm:gap-6">
                                 {links.map((item) => (
-                                    <NavLink key={item.route} href={route(item.route)} active={item.active}>
+                                    <NavLink key={item.route} href={route(item.route)} active={item.active} onDark>
                                         {item.name}
                                     </NavLink>
                                 ))}
@@ -43,7 +44,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                     <span className="inline-flex rounded-md">
                                         <button
                                             type="button"
-                                            className="inline-flex items-center gap-2 rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:outline-none"
+                                            className="inline-flex items-center gap-2 rounded-md border border-transparent bg-transparent px-3 py-2 text-sm font-medium text-teal-50 hover:text-white focus:outline-none"
                                         >
                                             {user.name}
                                             <ChevronDown className="h-4 w-4" />
@@ -65,7 +66,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                 aria-expanded={showingNavigationDropdown}
                                 aria-controls="menu-ponsel"
                                 onClick={() => setShowingNavigationDropdown((open) => !open)}
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none"
+                                className="inline-flex items-center justify-center rounded-md p-2 text-teal-100 hover:bg-white/10 hover:text-white focus:outline-none"
                             >
                                 <span className="relative block h-6 w-6">
                                     <Menu
@@ -86,27 +87,27 @@ export default function AuthenticatedLayout({ header, children }) {
 
                 <div
                     id="menu-ponsel"
-                    className={`absolute inset-x-0 top-full z-20 grid border-b border-gray-100 bg-white transition-[grid-template-rows] duration-300 ease-in-out sm:hidden ${
+                    className={`absolute inset-x-0 top-full z-20 grid border-b border-teal-950/40 bg-[#06302e] transition-[grid-template-rows] duration-300 ease-in-out sm:hidden ${
                         showingNavigationDropdown ? 'pointer-events-auto grid-rows-[1fr]' : 'pointer-events-none grid-rows-[0fr]'
                     }`}
                 >
                     <div className="overflow-hidden" inert={showingNavigationDropdown ? undefined : true}>
                         <div className="space-y-1 pb-3 pt-2">
                             {links.map((item) => (
-                                <ResponsiveNavLink key={item.route} href={route(item.route)} active={item.active}>
+                                <ResponsiveNavLink key={item.route} href={route(item.route)} active={item.active} onDark>
                                     {item.name}
                                 </ResponsiveNavLink>
                             ))}
                         </div>
-                        <div className="border-t border-gray-200 pb-1 pt-4">
+                        <div className="border-t border-white/15 pb-1 pt-4">
                             <div className="px-4">
-                                <div className="text-base font-medium text-gray-800">{user.name}</div>
-                                <div className="text-sm font-medium text-gray-500">{user.email}</div>
+                                <div className="text-base font-medium text-white">{user.name}</div>
+                                <div className="text-sm font-medium text-teal-100">{user.email}</div>
                             </div>
                             <div className="mt-3 space-y-1">
-                                <ResponsiveNavLink method="post" href={route('logout')} as="button">
-                                    Keluar
-                                </ResponsiveNavLink>
+                            <ResponsiveNavLink method="post" href={route('logout')} as="button" onDark>
+                                Keluar
+                            </ResponsiveNavLink>
                             </div>
                         </div>
                     </div>
