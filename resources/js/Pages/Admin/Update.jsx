@@ -9,7 +9,7 @@ export default function Update({ status }) {
     const current = result?.status ?? status;
     const check = useForm({});
     const apply = useForm({});
-    const canApply = current.available && !current.dirty && current.upstream;
+    const canApply = current.available && current.upstream;
 
     const submitApply = (event) => {
         event.preventDefault();
@@ -40,9 +40,14 @@ export default function Update({ status }) {
                                     : 'Cabang belum terhubung ke remote.'}
                             </p>
                             {current.dirty && (
-                                <p className="text-amber-800">
-                                    Ada perubahan lokal yang belum di-commit. Pembaruan tidak dijalankan agar perubahan itu tidak tertimpa.
-                                </p>
+                                <div className="text-amber-800">
+                                    <p>Ada perubahan lokal. Perubahan itu disimpan sementara saat pembaruan, lalu dikembalikan.</p>
+                                    <ul className="mt-2 list-disc pl-5 font-mono text-xs">
+                                        {current.dirty_files.map((file) => (
+                                            <li key={file}>{file}</li>
+                                        ))}
+                                    </ul>
+                                </div>
                             )}
                         </>
                     )}

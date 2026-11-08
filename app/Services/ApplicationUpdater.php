@@ -21,13 +21,13 @@ class ApplicationUpdater
         $commit = $this->git(['rev-parse', '--short=12', 'HEAD'], 20);
         $subject = $this->git(['log', '-1', '--pretty=%s'], 20);
         $remote = $this->git(['remote', 'get-url', 'origin'], 20);
-        $porcelain = $this->git(['status', '--porcelain'], 20);
+        $porcelain = $this->git(['status', '--porcelain'], 20, true);
 
         if (! $branch['ok'] || ! $commit['ok']) {
             return $this->unavailable(trim($branch['output'].$commit['output']) ?: 'Git tidak dapat membaca repositori.');
         }
 
-        $dirtyFiles = array_values(array_filter(explode("\n", trim($porcelain['output']))));
+        $dirtyFiles = $this->porcelainLines($porcelain['output']);
         $upstream = $this->git(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'], 20);
         $ahead = null;
         $behind = null;
@@ -81,10 +81,6 @@ class ApplicationUpdater
             return $this->result(false, $status['message'] ?? 'Pembaruan tidak dapat dijalankan.', []);
         }
 
-        if ($status['dirty']) {
-            return $this->result(false, 'Ada perubahan lokal yang belum disimpan ke Git. Pembaruan dihentikan agar perubahan itu tidak tertimpa.', []);
-        }
-
         if ($status['upstream'] === null) {
             return $this->result(false, 'Cabang ini belum terhubung ke remote. Atur upstream terlebih dahulu.', []);
         }
@@ -103,7 +99,13 @@ class ApplicationUpdater
 
         try {
             $steps = [];
-            $pull = $this->git(['pull', '--ff-only'], 180);
+            $restore = $this->git(['restore', '--source=HEAD', '--worktree', '--staged', '--', 'public/build'], 60);
+            if (! $restore['ok'] && str_contains($restore['output'], 'did not match')) {
+                $restore['ok'] = true;
+            }
+            $steps[] = $restore;
+
+            $pull = $this->git(['pull', '--ff-only', '--autostash'], 180);
             $steps[] = $pull;
             if (! $pull['ok']) {
                 return $this->result(false, 'Gagal mengambil kode terbaru.', $steps);
@@ -164,16 +166,43 @@ class ApplicationUpdater
      * @param  list<string>  $args
      * @return array{command: string, ok: bool, output: string}
      */
-    private function git(array $args, int $timeout): array
+    private function git(array $args, int $timeout, bool $stdoutOnly = false): array
     {
-        return $this->run(['git', '-c', 'safe.directory='.base_path(), ...$args], $timeout);
+        return $this->run([
+            'git',
+            '-c',
+            'safe.directory='.base_path(),
+            '-c',
+            'core.filemode=false',
+            ...$args,
+        ], $timeout, $stdoutOnly);
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function porcelainLines(string $output): array
+    {
+        $lines = [];
+        foreach (preg_split("/\r\n|\n|\r/", trim($output)) ?: [] as $line) {
+            if (preg_match('/^[ MADRCU?!]{2} /', $line) !== 1) {
+                continue;
+            }
+            $path = trim(substr($line, 3), '"');
+            if ($path === 'public/build' || str_starts_with($path, 'public/build/')) {
+                continue;
+            }
+            $lines[] = $line;
+        }
+
+        return $lines;
     }
 
     /**
      * @param  list<string>  $command
      * @return array{command: string, ok: bool, output: string}
      */
-    private function run(array $command, int $timeout): array
+    private function run(array $command, int $timeout, bool $stdoutOnly = false): array
     {
         $environment = getenv();
         if (! is_array($environment)) {
@@ -187,7 +216,8 @@ class ApplicationUpdater
             ->env($environment)
             ->run($command);
 
-        $output = $this->redact(trim($result->output()."\n".$result->errorOutput()));
+        $output = $stdoutOnly ? $result->output() : $result->output()."\n".$result->errorOutput();
+        $output = $this->redact(trim($output));
         if (strlen($output) > 12000) {
             $output = substr($output, -12000);
         }
