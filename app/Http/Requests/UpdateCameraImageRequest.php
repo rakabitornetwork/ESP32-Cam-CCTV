@@ -19,7 +19,7 @@ class UpdateCameraImageRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'image_quality' => ['required', 'string', 'in:hemat,standar,tajam'],
+            'image_quality' => ['required', 'string', 'in:hemat,standar,tajam,penuh'],
             'image_settings' => ['required', 'array'],
             'image_settings.brightness' => ['required', 'integer', 'between:-2,2'],
             'image_settings.contrast' => ['required', 'integer', 'between:-2,2'],

@@ -225,9 +225,10 @@ export default function Edit({ retainDays, maxRetainDays, canManage, cameras }) 
                                     onChange={(event) => camera.setData('image_quality', event.target.value)}
                                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
                                 >
-                                    <option value="hemat">Hemat — berkas lebih kecil</option>
-                                    <option value="standar">Standar</option>
-                                    <option value="tajam">Tajam — lebih detail</option>
+                                    <option value="hemat">Hemat — 640×480</option>
+                                    <option value="standar">Standar — 800×600</option>
+                                    <option value="tajam">Tajam — 1024×768</option>
+                                    <option value="penuh">Penuh — 1600×1200</option>
                                 </select>
                                 <p className="mt-2 text-xs text-gray-500">Menentukan ukuran foto. Kamera memakai pilihan ini tanpa flash ulang.</p>
                                 <InputError message={camera.errors.image_quality} className="mt-2" />

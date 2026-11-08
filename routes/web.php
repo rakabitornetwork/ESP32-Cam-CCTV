@@ -34,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('captures', [CaptureController::class, 'index'])->name('captures.index');
     Route::get('captures/{capture}/stream', [CaptureController::class, 'stream'])->name('captures.stream');
+    Route::patch('captures/{capture}/rotation', [CaptureController::class, 'rotate'])->name('captures.rotate');
     Route::delete('captures/{capture}', [CaptureController::class, 'destroy'])->name('captures.destroy');
 
     Route::get('billing', [BillingController::class, 'index'])->name('billing.index');

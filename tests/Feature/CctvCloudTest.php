@@ -331,6 +331,30 @@ class CctvCloudTest extends TestCase
             ->assertHeader('content-type', 'image/jpeg');
     }
 
+    public function test_a_capture_can_be_rotated_from_the_gallery(): void
+    {
+        [$user, $organization] = $this->owner();
+        $device = Device::provision($organization, 'ESP32-CAM')['device'];
+        $capture = $organization->captures()->create([
+            'device_id' => $device->id,
+            'trigger' => 'pir',
+            'bytes' => 100,
+            'disk' => 'cctv',
+            'path' => '1/1/a.jpg',
+            'captured_at' => now(),
+        ]);
+
+        $this->actingAs($user)->patch(route('captures.rotate', $capture), [
+            'direction' => 'right',
+        ])->assertRedirect();
+        $this->assertSame(90, $capture->fresh()->rotation);
+
+        $this->actingAs($user)->patch(route('captures.rotate', $capture), [
+            'direction' => 'left',
+        ])->assertRedirect();
+        $this->assertSame(0, $capture->fresh()->rotation);
+    }
+
     public function test_viewer_cannot_change_plan(): void
     {
         [, $organization] = $this->owner();

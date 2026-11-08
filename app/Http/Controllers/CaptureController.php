@@ -6,6 +6,7 @@ use App\Models\Capture;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -26,6 +27,7 @@ class CaptureController extends Controller
                 'device_name' => $capture->device?->name,
                 'trigger' => $capture->trigger->value,
                 'bytes' => $capture->bytes,
+                'rotation' => (int) $capture->rotation,
                 'captured_at' => $capture->captured_at?->toIso8601String(),
             ]);
 
@@ -44,6 +46,22 @@ class CaptureController extends Controller
             null,
             ['Content-Type' => 'image/jpeg'],
         );
+    }
+
+    public function rotate(Request $request, Capture $capture): RedirectResponse
+    {
+        $this->authorize('rotate', $capture);
+
+        $direction = $request->validate([
+            'direction' => ['required', 'string', Rule::in(['left', 'right'])],
+        ])['direction'];
+
+        $turns = $direction === 'right' ? 90 : 270;
+        $capture->update([
+            'rotation' => ((int) $capture->rotation + $turns) % 360,
+        ]);
+
+        return back();
     }
 
     public function destroy(Capture $capture): RedirectResponse

@@ -17,6 +17,7 @@ class Capture extends Model
         'disk',
         'path',
         'captured_at',
+        'rotation',
         'latitude',
         'longitude',
     ];
@@ -31,6 +32,7 @@ class Capture extends Model
             'trigger' => CaptureTrigger::class,
             'bytes' => 'integer',
             'captured_at' => 'datetime',
+            'rotation' => 'integer',
             'latitude' => 'float',
             'longitude' => 'float',
         ];

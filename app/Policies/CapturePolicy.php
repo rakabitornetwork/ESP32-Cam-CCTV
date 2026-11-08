@@ -17,6 +17,11 @@ class CapturePolicy
         return $user->belongsToOrganization($capture->organization_id);
     }
 
+    public function rotate(User $user, Capture $capture): bool
+    {
+        return $this->view($user, $capture);
+    }
+
     public function delete(User $user, Capture $capture): bool
     {
         return $user->canManageOrganization($capture->organization_id);

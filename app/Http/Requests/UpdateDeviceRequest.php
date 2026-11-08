@@ -32,7 +32,7 @@ class UpdateDeviceRequest extends FormRequest
             'location' => ['nullable', 'string', 'max:255'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
-            'image_quality' => ['sometimes', 'string', 'in:hemat,standar,tajam'],
+            'image_quality' => ['sometimes', 'string', 'in:hemat,standar,tajam,penuh'],
             'image_settings' => ['sometimes', 'array'],
             'image_settings.brightness' => ['required_with:image_settings', 'integer', 'between:-2,2'],
             'image_settings.contrast' => ['required_with:image_settings', 'integer', 'between:-2,2'],

@@ -8,7 +8,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 export default function Show({ device, plainToken }) {
     const canManage = ['owner', 'admin'].includes(usePage().props.organization?.role);
     const errors = usePage().props.errors;
-    const qualityLabel = { hemat: 'Hemat', standar: 'Standar', tajam: 'Tajam' }[device.image_quality] || 'Standar';
+    const qualityLabel = { hemat: 'Hemat 640×480', standar: 'Standar 800×600', tajam: 'Tajam 1024×768', penuh: 'Penuh 1600×1200' }[device.image_quality] || 'Standar';
 
     return (
         <AuthenticatedLayout header={<h2 className="text-xl font-semibold text-gray-800">{device.name}</h2>}>
@@ -33,7 +33,7 @@ export default function Show({ device, plainToken }) {
                         Kualitas gambar: {qualityLabel}. Kecerahan dan pratinjau langsung ada di{' '}
                         <Link href={route('settings.edit')} className="text-brand-700 underline">Pengaturan</Link>.
                     </p>
-                    <p>Foto dikirim saat sensor mendeteksi gerakan baru, lalu kamera menunggu 15 detik.</p>
+                    <p>Foto dikirim saat sensor mendeteksi perubahan panas tubuh, lalu kamera menunggu 7 detik.</p>
                 </div>
                 {canManage && (
                     <div className="flex flex-wrap gap-3">
