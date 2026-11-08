@@ -18,11 +18,19 @@ class CaptureController extends Controller
         $this->authorize('viewAny', Capture::class);
         $organization = $request->user()->currentOrganization();
 
+        $cameras = $organization->devices()->orderBy('name')->get(['id', 'name']);
+        $cameraId = $request->integer('kamera') ?: null;
+        if ($cameraId !== null && ! $cameras->contains('id', $cameraId)) {
+            $cameraId = null;
+        }
+
         $captures = $organization->captures()
             ->with('device:id,name')
             ->where('trigger', 'pir')
+            ->when($cameraId, fn ($query) => $query->where('device_id', $cameraId))
             ->latest('captured_at')
             ->paginate(24)
+            ->withQueryString()
             ->through(fn (Capture $capture) => [
                 'id' => $capture->id,
                 'device_name' => $capture->device?->name,
@@ -34,6 +42,11 @@ class CaptureController extends Controller
 
         return Inertia::render('Captures/Index', [
             'captures' => $captures,
+            'cameras' => $cameras->map(fn ($device) => [
+                'id' => $device->id,
+                'name' => $device->name,
+            ])->values(),
+            'camera' => $cameraId,
         ]);
     }
 

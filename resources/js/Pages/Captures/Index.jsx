@@ -57,10 +57,19 @@ function CapturePhoto({ src, alt, rotation, variant }) {
     );
 }
 
-export default function Index({ captures }) {
+export default function Index({ captures, cameras, camera }) {
     const [selectedId, setSelectedId] = useState(null);
     const [turning, setTurning] = useState(false);
     const selected = captures.data.find((capture) => capture.id === selectedId) || null;
+
+    const chooseCamera = (event) => {
+        const value = event.target.value;
+        router.get(
+            route('captures.index'),
+            value ? { kamera: value } : {},
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
 
     const rotate = (direction) => {
         if (!selected) {
@@ -78,8 +87,28 @@ export default function Index({ captures }) {
         <AuthenticatedLayout header={<h2 className="text-xl font-semibold text-gray-800">Galeri</h2>}>
             <Head title="Galeri" />
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="mb-6 flex items-center gap-3">
+                    <label htmlFor="kamera" className="text-sm text-gray-500">
+                        Kamera
+                    </label>
+                    <select
+                        id="kamera"
+                        value={camera ? String(camera) : ''}
+                        onChange={chooseCamera}
+                        className="h-10 min-w-48 border border-gray-300 bg-white px-3 text-sm text-gray-900"
+                    >
+                        <option value="">Semua kamera</option>
+                        {cameras.map((item) => (
+                            <option key={item.id} value={item.id}>
+                                {item.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
                 {captures.data.length === 0 ? (
-                    <p className="text-sm text-gray-600">Belum ada foto dari sensor PIR.</p>
+                    <p className="text-sm text-gray-600">
+                        {camera ? 'Belum ada foto dari kamera ini.' : 'Belum ada foto dari sensor PIR.'}
+                    </p>
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {captures.data.map((capture) => (

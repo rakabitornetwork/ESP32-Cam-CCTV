@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreDeviceRequest;
 use App\Http\Requests\UpdateDeviceRequest;
+use App\Models\Capture;
 use App\Models\Device;
-use App\Services\SubscriptionGate;
+use App\Models\Recording;
 use App\Support\CameraImageSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,6 +23,8 @@ class DeviceController extends Controller
 
         return Inertia::render('Devices/Index', [
             'devices' => $organization->devices()->latest()->get()->map(fn (Device $device) => $this->payload($device)),
+            'plainToken' => $request->session()->pull('plain_token'),
+            'tokenDevice' => $request->session()->pull('token_device'),
         ]);
     }
 
@@ -41,10 +45,9 @@ class DeviceController extends Controller
         return Inertia::render('Devices/Create');
     }
 
-    public function store(StoreDeviceRequest $request, SubscriptionGate $gate): RedirectResponse
+    public function store(StoreDeviceRequest $request): RedirectResponse
     {
         $organization = $request->user()->currentOrganization();
-        $gate->assertCanAddDevice($organization);
 
         $provisioned = Device::provision(
             $organization,
@@ -55,8 +58,9 @@ class DeviceController extends Controller
         );
 
         return redirect()
-            ->route('devices.show', $provisioned['device'])
-            ->with('plain_token', $provisioned['plain_token']);
+            ->route('devices.index')
+            ->with('plain_token', $provisioned['plain_token'])
+            ->with('token_device', $provisioned['device']->name);
     }
 
     public function show(Request $request, Device $device): Response
@@ -86,20 +90,27 @@ class DeviceController extends Controller
         }
         $device->update($fields);
 
-        return redirect()->route('devices.show', $device);
+        return redirect()->route('devices.index');
     }
 
     public function destroy(Device $device): RedirectResponse
     {
         $this->authorize('delete', $device);
 
-        if ($device->recordings()->exists() || $device->captures()->exists()) {
-            return back()->withErrors([
-                'device' => 'Hapus rekaman dan tangkapan perangkat ini terlebih dahulu.',
-            ]);
-        }
+        $bytes = (int) $device->captures()->sum('bytes') + (int) $device->recordings()->sum('bytes');
+        $device->captures()->each(fn (Capture $capture) => $capture->deleteStoredFile());
+        $device->recordings()->each(fn (Recording $recording) => $recording->deleteStoredFile());
+        Storage::disk('cctv')->delete($device->previewPath());
 
+        $organization = $device->organization;
         $device->delete();
+
+        $quota = $organization->storageQuota;
+        if ($quota !== null && $bytes > 0) {
+            $quota->forceFill([
+                'used_bytes' => max(0, $quota->used_bytes - $bytes),
+            ])->save();
+        }
 
         return redirect()->route('devices.index');
     }

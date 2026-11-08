@@ -12,6 +12,10 @@
     --color-brand-700: #115e59;
 }
 
+html {
+    overflow-y: scroll;
+}
+
 .rdp-root {
     --rdp-accent-color: #0f766e;
     --rdp-accent-background-color: #ccfbf1;

@@ -1,5 +1,6 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
+import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, Menu, X } from 'lucide-react';
@@ -8,6 +9,13 @@ import { useState } from 'react';
 export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+    const links = [
+        { name: 'Kamera', route: 'devices.index', active: route().current('devices.index') },
+        { name: 'Galeri', route: 'captures.index', active: route().current('captures.index') },
+        ...(user?.is_admin
+            ? [{ name: 'Pembaruan', route: 'admin.update', active: route().current('admin.update') }]
+            : []),
+    ];
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -19,6 +27,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                 <Link href={route('captures.index')}>
                                     <ApplicationLogo className="block h-9 w-auto fill-current text-gray-800" />
                                 </Link>
+                            </div>
+                            <div className="hidden sm:-my-px sm:ms-8 sm:flex sm:gap-6">
+                                {links.map((item) => (
+                                    <NavLink key={item.route} href={route(item.route)} active={item.active}>
+                                        {item.name}
+                                    </NavLink>
+                                ))}
                             </div>
                         </div>
 
@@ -57,6 +72,13 @@ export default function AuthenticatedLayout({ header, children }) {
                 </div>
 
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
+                    <div className="space-y-1 pb-3 pt-2">
+                        {links.map((item) => (
+                            <ResponsiveNavLink key={item.route} href={route(item.route)} active={item.active}>
+                                {item.name}
+                            </ResponsiveNavLink>
+                        ))}
+                    </div>
                     <div className="border-t border-gray-200 pb-1 pt-4">
                         <div className="px-4">
                             <div className="text-base font-medium text-gray-800">{user.name}</div>
