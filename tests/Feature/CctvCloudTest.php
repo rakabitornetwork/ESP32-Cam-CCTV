@@ -219,6 +219,56 @@ class CctvCloudTest extends TestCase
         ])->assertSessionHasErrors('image_quality');
     }
 
+    public function test_device_custom_image_settings_are_sent_to_the_camera(): void
+    {
+        [$user, , $token, $device] = $this->device();
+
+        $this->withToken($token)->getJson('/api/v1/devices/me')
+            ->assertOk()
+            ->assertJsonPath('image_settings.brightness', 0)
+            ->assertJsonPath('image_settings.saturation', -1)
+            ->assertJsonPath('image_settings.hmirror', false);
+
+        $this->actingAs($user)->put(route('devices.update', $device), [
+            'name' => 'ESP32-CAM',
+            'image_quality' => 'standar',
+            'image_settings' => [
+                'brightness' => 1,
+                'contrast' => -1,
+                'saturation' => 0,
+                'sharpness' => 2,
+                'ae_level' => 1,
+                'wb_mode' => 4,
+                'hmirror' => true,
+                'vflip' => false,
+            ],
+        ])->assertRedirect();
+
+        $this->withToken($token)->getJson('/api/v1/devices/me')
+            ->assertOk()
+            ->assertJsonPath('image_settings.brightness', 1)
+            ->assertJsonPath('image_settings.contrast', -1)
+            ->assertJsonPath('image_settings.sharpness', 2)
+            ->assertJsonPath('image_settings.wb_mode', 4)
+            ->assertJsonPath('image_settings.hmirror', true)
+            ->assertJsonPath('image_settings.vflip', false);
+
+        $this->actingAs($user)->put(route('devices.update', $device), [
+            'name' => 'ESP32-CAM',
+            'image_quality' => 'standar',
+            'image_settings' => [
+                'brightness' => 9,
+                'contrast' => 0,
+                'saturation' => 0,
+                'sharpness' => 0,
+                'ae_level' => 0,
+                'wb_mode' => 0,
+                'hmirror' => false,
+                'vflip' => false,
+            ],
+        ])->assertSessionHasErrors('image_settings.brightness');
+    }
+
     public function test_viewer_cannot_change_plan(): void
     {
         [, $organization] = $this->owner();

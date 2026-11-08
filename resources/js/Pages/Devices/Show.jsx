@@ -30,6 +30,9 @@ export default function Show({ device, plainToken }) {
                     <p>Terakhir terlihat: {formatWhen(device.last_seen_at)}</p>
                     <p>PIR: {device.pir_armed ? 'Siaga' : 'Mati'}</p>
                     <p>Kualitas gambar: {qualityLabel}</p>
+                    <p>
+                        Gambar khusus: kecerahan {device.image_settings?.brightness ?? 0}, kontras {device.image_settings?.contrast ?? 0}, saturasi {device.image_settings?.saturation ?? -1}, ketajaman {device.image_settings?.sharpness ?? 0}
+                    </p>
                     <p>Foto dikirim saat sensor mendeteksi gerakan baru, lalu kamera menunggu 15 detik.</p>
                 </div>
                 {canManage && (

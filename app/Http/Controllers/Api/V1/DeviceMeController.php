@@ -28,6 +28,7 @@ class DeviceMeController extends Controller
             ],
             'capture_allowed' => $gate->captureAllowed($organization),
             'image_quality' => $device->image_quality ?: 'standar',
+            'image_settings' => $device->imageSettings(),
             'bytes_remaining' => $quota?->remainingBytes() ?? 0,
             'captures_remaining_today' => $gate->capturesRemainingToday($organization),
             'plan_status' => $organization->subscription?->status?->value,

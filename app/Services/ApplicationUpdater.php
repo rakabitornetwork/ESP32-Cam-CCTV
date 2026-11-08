@@ -99,13 +99,19 @@ class ApplicationUpdater
 
         try {
             $steps = [];
-            $restore = $this->git(['restore', '--source=HEAD', '--worktree', '--staged', '--', 'public/build'], 60);
+            $restore = $this->git(['checkout', '--', 'public/build'], 60);
             if (! $restore['ok'] && str_contains($restore['output'], 'did not match')) {
                 $restore['ok'] = true;
             }
             $steps[] = $restore;
 
             $pull = $this->git(['pull', '--ff-only', '--autostash'], 180);
+            if (! $pull['ok'] && str_contains($pull['output'], 'would be overwritten')) {
+                $steps[] = $pull;
+                $restore = $this->git(['checkout', '--', 'public/build'], 60);
+                $steps[] = $restore;
+                $pull = $this->git(['pull', '--ff-only', '--autostash'], 180);
+            }
             $steps[] = $pull;
             if (! $pull['ok']) {
                 return $this->result(false, 'Gagal mengambil kode terbaru.', $steps);

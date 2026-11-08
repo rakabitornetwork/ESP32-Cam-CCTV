@@ -33,6 +33,15 @@ class UpdateDeviceRequest extends FormRequest
             'latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:longitude'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:latitude'],
             'image_quality' => ['required', 'string', 'in:hemat,standar,tajam'],
+            'image_settings' => ['sometimes', 'array'],
+            'image_settings.brightness' => ['required_with:image_settings', 'integer', 'between:-2,2'],
+            'image_settings.contrast' => ['required_with:image_settings', 'integer', 'between:-2,2'],
+            'image_settings.saturation' => ['required_with:image_settings', 'integer', 'between:-2,2'],
+            'image_settings.sharpness' => ['required_with:image_settings', 'integer', 'between:-2,2'],
+            'image_settings.ae_level' => ['required_with:image_settings', 'integer', 'between:-2,2'],
+            'image_settings.wb_mode' => ['required_with:image_settings', 'integer', 'between:0,4'],
+            'image_settings.hmirror' => ['required_with:image_settings', 'boolean'],
+            'image_settings.vflip' => ['required_with:image_settings', 'boolean'],
         ];
     }
 }

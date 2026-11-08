@@ -6,6 +6,7 @@ use App\Http\Requests\StoreDeviceRequest;
 use App\Http\Requests\UpdateDeviceRequest;
 use App\Models\Device;
 use App\Services\SubscriptionGate;
+use App\Support\CameraImageSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -79,7 +80,11 @@ class DeviceController extends Controller
 
     public function update(UpdateDeviceRequest $request, Device $device): RedirectResponse
     {
-        $device->update($request->safe()->only(['name', 'location', 'latitude', 'longitude', 'image_quality']));
+        $fields = $request->safe()->only(['name', 'location', 'latitude', 'longitude', 'image_quality']);
+        if ($request->exists('image_settings')) {
+            $fields['image_settings'] = CameraImageSettings::normalize($request->validated('image_settings'));
+        }
+        $device->update($fields);
 
         return redirect()->route('devices.show', $device);
     }
@@ -125,6 +130,7 @@ class DeviceController extends Controller
             'rssi' => $device->rssi,
             'firmware' => $device->firmware,
             'image_quality' => $device->image_quality ?: 'standar',
+            'image_settings' => $device->imageSettings(),
         ];
     }
 }

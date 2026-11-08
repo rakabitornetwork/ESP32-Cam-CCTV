@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\CameraImageSettings;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,6 +23,7 @@ class Device extends Model
         'rssi',
         'firmware',
         'image_quality',
+        'image_settings',
     ];
 
     protected $hidden = [
@@ -36,7 +38,16 @@ class Device extends Model
             'last_seen_at' => 'datetime',
             'pir_armed' => 'boolean',
             'rssi' => 'integer',
+            'image_settings' => 'array',
         ];
+    }
+
+    /**
+     * @return array<string, int|bool>
+     */
+    public function imageSettings(): array
+    {
+        return CameraImageSettings::normalize($this->image_settings);
     }
 
     public function organization(): BelongsTo
