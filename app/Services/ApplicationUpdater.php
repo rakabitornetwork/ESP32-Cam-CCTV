@@ -117,32 +117,6 @@ class ApplicationUpdater
                 return $this->result(false, 'Gagal mengambil kode terbaru.', $steps);
             }
 
-            $composer = [config('cctv.composer_binary'), 'install', '--no-interaction', '--prefer-dist', '--optimize-autoloader'];
-            if (app()->environment('production')) {
-                $composer[] = '--no-dev';
-            }
-            $composerStep = $this->run($composer, 600);
-            $steps[] = $composerStep;
-            if (! $composerStep['ok']) {
-                return $this->result(false, 'Gagal memasang dependensi PHP.', $steps);
-            }
-
-            $npm = config('cctv.npm_binary');
-            $install = is_file(base_path('package-lock.json'))
-                ? [$npm, 'ci', '--no-audit', '--no-fund']
-                : [$npm, 'install', '--no-audit', '--no-fund'];
-            $npmInstall = $this->run($install, 600);
-            $steps[] = $npmInstall;
-            if (! $npmInstall['ok']) {
-                return $this->result(false, 'Gagal memasang dependensi tampilan.', $steps);
-            }
-
-            $build = $this->run([$npm, 'run', 'build'], 600);
-            $steps[] = $build;
-            if (! $build['ok']) {
-                return $this->result(false, 'Gagal membangun tampilan.', $steps);
-            }
-
             $php = config('cctv.php_binary');
             $migrate = $this->run([$php, 'artisan', 'migrate', '--force', '--no-interaction'], 180);
             $steps[] = $migrate;

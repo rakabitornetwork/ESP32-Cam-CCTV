@@ -20,7 +20,7 @@ export default function Update({ status }) {
 
     const submitApply = (event) => {
         event.preventDefault();
-        if (!confirm('Aplikasi akan mengambil kode terbaru, memasang dependensi, membangun tampilan, lalu menjalankan migrasi. Lanjutkan?')) {
+        if (!confirm('Aplikasi akan mengambil kode terbaru, lalu menjalankan migrasi. Lanjutkan?')) {
             return;
         }
         apply.post(route('admin.update.apply'));
@@ -83,7 +83,7 @@ export default function Update({ status }) {
 
                 {apply.processing && (
                     <p className="mt-4 text-sm text-gray-600">
-                        Jangan tutup halaman ini. Pemasangan dependensi dan pembangunan tampilan bisa beberapa menit.
+                        Jangan tutup halaman ini. Migrasi database bisa beberapa saat.
                     </p>
                 )}
 
