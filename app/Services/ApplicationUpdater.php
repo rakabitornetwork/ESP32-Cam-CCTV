@@ -117,7 +117,7 @@ class ApplicationUpdater
                 return $this->result(false, 'Gagal mengambil kode terbaru.', $steps);
             }
 
-            $php = config('cctv.php_binary');
+            $php = $this->phpBinary();
             $migrate = $this->run([$php, 'artisan', 'migrate', '--force', '--no-interaction'], 180);
             $steps[] = $migrate;
             if (! $migrate['ok']) {
@@ -140,6 +140,41 @@ class ApplicationUpdater
         } finally {
             $lock?->release();
         }
+    }
+
+    private function phpBinary(): string
+    {
+        $configured = (string) config('cctv.php_binary');
+        $candidates = array_values(array_unique(array_filter([
+            $this->isFpmBinary($configured) ? null : $configured,
+            '/usr/bin/php',
+            PHP_BINDIR.'/php',
+            'php',
+        ])));
+
+        foreach ($candidates as $candidate) {
+            if ($this->isCliPhp($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return 'php';
+    }
+
+    private function isFpmBinary(string $binary): bool
+    {
+        return str_contains(strtolower($binary), 'php-fpm');
+    }
+
+    private function isCliPhp(string $binary): bool
+    {
+        if ($binary === '' || $this->isFpmBinary($binary)) {
+            return false;
+        }
+
+        $result = Process::timeout(15)->run([$binary, '-r', 'echo PHP_SAPI;']);
+
+        return $result->successful() && trim($result->output()) === 'cli';
     }
 
     /**
