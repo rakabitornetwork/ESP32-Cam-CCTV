@@ -21,6 +21,7 @@ class Device extends Model
         'pir_armed',
         'rssi',
         'firmware',
+        'image_quality',
     ];
 
     protected $hidden = [

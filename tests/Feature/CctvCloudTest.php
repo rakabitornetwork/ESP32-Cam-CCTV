@@ -179,6 +179,31 @@ class CctvCloudTest extends TestCase
         $this->assertSame($plan->max_bytes, $organization->storageQuota()->first()->max_bytes);
     }
 
+    public function test_device_image_quality_is_sent_to_the_camera(): void
+    {
+        [$user, , $token, $device] = $this->device();
+
+        $this->withToken($token)->getJson('/api/v1/devices/me')
+            ->assertOk()
+            ->assertJsonPath('image_quality', 'standar');
+
+        $this->actingAs($user)->put(route('devices.update', $device), [
+            'name' => 'ESP32-CAM',
+            'image_quality' => 'tajam',
+        ])->assertRedirect();
+
+        $this->assertSame('tajam', $device->fresh()->image_quality);
+
+        $this->withToken($token)->getJson('/api/v1/devices/me')
+            ->assertOk()
+            ->assertJsonPath('image_quality', 'tajam');
+
+        $this->actingAs($user)->put(route('devices.update', $device), [
+            'name' => 'ESP32-CAM',
+            'image_quality' => 'sangat-tajam',
+        ])->assertSessionHasErrors('image_quality');
+    }
+
     public function test_viewer_cannot_change_plan(): void
     {
         [, $organization] = $this->owner();

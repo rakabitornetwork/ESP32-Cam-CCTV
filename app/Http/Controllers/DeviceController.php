@@ -79,7 +79,7 @@ class DeviceController extends Controller
 
     public function update(UpdateDeviceRequest $request, Device $device): RedirectResponse
     {
-        $device->update($request->safe()->only(['name', 'location', 'latitude', 'longitude']));
+        $device->update($request->safe()->only(['name', 'location', 'latitude', 'longitude', 'image_quality']));
 
         return redirect()->route('devices.show', $device);
     }
@@ -124,6 +124,7 @@ class DeviceController extends Controller
             'pir_armed' => $device->pir_armed,
             'rssi' => $device->rssi,
             'firmware' => $device->firmware,
+            'image_quality' => $device->image_quality ?: 'standar',
         ];
     }
 }

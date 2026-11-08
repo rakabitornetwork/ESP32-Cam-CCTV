@@ -8,6 +8,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 export default function Show({ device, plainToken }) {
     const canManage = ['owner', 'admin'].includes(usePage().props.organization?.role);
     const errors = usePage().props.errors;
+    const qualityLabel = { hemat: 'Hemat', standar: 'Standar', tajam: 'Tajam' }[device.image_quality] || 'Standar';
 
     return (
         <AuthenticatedLayout header={<h2 className="text-xl font-semibold text-gray-800">{device.name}</h2>}>
@@ -28,6 +29,8 @@ export default function Show({ device, plainToken }) {
                     <p>Awalan token: {device.token_prefix}</p>
                     <p>Terakhir terlihat: {formatWhen(device.last_seen_at)}</p>
                     <p>PIR: {device.pir_armed ? 'Siaga' : 'Mati'}</p>
+                    <p>Kualitas gambar: {qualityLabel}</p>
+                    <p>Foto dikirim saat sensor mendeteksi gerakan baru, lalu kamera menunggu 15 detik.</p>
                 </div>
                 {canManage && (
                     <div className="flex flex-wrap gap-3">

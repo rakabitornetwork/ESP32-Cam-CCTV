@@ -14,6 +14,7 @@ export default function Edit({ device }) {
         location: device.location || '',
         latitude: device.latitude ?? '',
         longitude: device.longitude ?? '',
+        image_quality: device.image_quality || 'standar',
     });
 
     const submit = (event) => {
@@ -46,6 +47,21 @@ export default function Edit({ device }) {
                         </div>
                     </div>
                     <InputError message={errors.latitude || errors.longitude} className="mt-2" />
+                    <div>
+                        <InputLabel htmlFor="image_quality" value="Kualitas gambar" />
+                        <select
+                            id="image_quality"
+                            value={data.image_quality}
+                            onChange={(event) => setData('image_quality', event.target.value)}
+                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
+                        >
+                            <option value="hemat">Hemat — berkas lebih kecil</option>
+                            <option value="standar">Standar</option>
+                            <option value="tajam">Tajam — lebih detail</option>
+                        </select>
+                        <p className="mt-2 text-xs text-gray-500">Kamera memakai pilihan ini pada foto berikutnya, tanpa flash ulang.</p>
+                        <InputError message={errors.image_quality} className="mt-2" />
+                    </div>
                     <PrimaryButton disabled={processing}>Simpan</PrimaryButton>
                 </div>
                 <Suspense fallback={<div className="h-112 animate-pulse rounded-lg bg-gray-200" />}>
