@@ -4,7 +4,8 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatBytes, formatWhen } from '@/lib/format';
 import { DialogTitle } from '@headlessui/react';
 import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 function angleOf(rotation) {
     return ((Number(rotation) || 0) % 360 + 360) % 360;
@@ -57,13 +58,41 @@ function CapturePhoto({ src, alt, rotation, variant }) {
     );
 }
 
-export default function Index({ captures, cameras, camera }) {
+export default function Index({ captures, cameras = [], camera }) {
     const [selectedId, setSelectedId] = useState(null);
     const [turning, setTurning] = useState(false);
+    const [cameraOpen, setCameraOpen] = useState(false);
+    const cameraMenu = useRef(null);
     const selected = captures.data.find((capture) => capture.id === selectedId) || null;
+    const cameraName = cameras.find((item) => String(item.id) === String(camera))?.name || 'Semua kamera';
 
-    const chooseCamera = (event) => {
-        const value = event.target.value;
+    useEffect(() => {
+        if (!cameraOpen) {
+            return undefined;
+        }
+
+        const close = (event) => {
+            if (!cameraMenu.current?.contains(event.target)) {
+                setCameraOpen(false);
+            }
+        };
+        const onKey = (event) => {
+            if (event.key === 'Escape') {
+                setCameraOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', close);
+        document.addEventListener('keydown', onKey);
+
+        return () => {
+            document.removeEventListener('mousedown', close);
+            document.removeEventListener('keydown', onKey);
+        };
+    }, [cameraOpen]);
+
+    const chooseCamera = (value) => {
+        setCameraOpen(false);
         router.get(
             route('captures.index'),
             value ? { kamera: value } : {},
@@ -88,22 +117,56 @@ export default function Index({ captures, cameras, camera }) {
             <Head title="Galeri" />
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-6 flex items-center gap-3">
-                    <label htmlFor="kamera" className="text-sm text-gray-500">
+                    <label id="kamera-label" className="text-sm text-gray-500">
                         Kamera
                     </label>
-                    <select
-                        id="kamera"
-                        value={camera ? String(camera) : ''}
-                        onChange={chooseCamera}
-                        className="h-10 min-w-48 border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    >
-                        <option value="">Semua kamera</option>
-                        {cameras.map((item) => (
-                            <option key={item.id} value={item.id}>
-                                {item.name}
-                            </option>
-                        ))}
-                    </select>
+                    <div ref={cameraMenu} className="relative min-w-48">
+                        <button
+                            type="button"
+                            id="kamera"
+                            aria-labelledby="kamera-label"
+                            aria-haspopup="listbox"
+                            aria-expanded={cameraOpen}
+                            onClick={() => setCameraOpen((open) => !open)}
+                            className="flex h-10 w-full items-center justify-between gap-3 border border-gray-300 bg-white px-3 text-left text-sm text-gray-900"
+                        >
+                            <span className="truncate">{cameraName}</span>
+                            <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
+                        </button>
+                        <div
+                            role="listbox"
+                            aria-labelledby="kamera-label"
+                            className={`absolute inset-x-0 top-full z-30 mt-1 grid bg-white text-sm shadow-sm transition-[grid-template-rows] duration-200 ease-out ${
+                                cameraOpen
+                                    ? 'grid-rows-[1fr] border border-gray-300'
+                                    : 'pointer-events-none grid-rows-[0fr] border-0'
+                            }`}
+                        >
+                            <div className="overflow-hidden">
+                                <button
+                                    type="button"
+                                    role="option"
+                                    aria-selected={!camera}
+                                    onClick={() => chooseCamera('')}
+                                    className="block w-full truncate px-3 py-2 text-left hover:bg-gray-50"
+                                >
+                                    Semua kamera
+                                </button>
+                                {cameras.map((item) => (
+                                    <button
+                                        key={item.id}
+                                        type="button"
+                                        role="option"
+                                        aria-selected={String(item.id) === String(camera)}
+                                        onClick={() => chooseCamera(item.id)}
+                                        className="block w-full truncate px-3 py-2 text-left hover:bg-gray-50"
+                                    >
+                                        {item.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 {captures.data.length === 0 ? (
                     <p className="text-sm text-gray-600">
