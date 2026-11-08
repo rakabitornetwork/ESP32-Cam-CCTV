@@ -1,0 +1,18 @@
+@import 'tailwindcss';
+
+@plugin '@tailwindcss/forms';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+@theme {
+    --font-sans: 'Figtree', ui-sans-serif, system-ui, sans-serif;
+    --color-brand-50: #f0fdfa;
+    --color-brand-600: #0f766e;
+    --color-brand-700: #115e59;
+}
+
+.rdp-root {
+    --rdp-accent-color: #0f766e;
+    --rdp-accent-background-color: #ccfbf1;
+}
