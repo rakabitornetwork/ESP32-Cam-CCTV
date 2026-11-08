@@ -75,11 +75,11 @@ export default function Index({ captures }) {
     };
 
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold text-gray-800">Tangkapan</h2>}>
-            <Head title="Tangkapan" />
+        <AuthenticatedLayout header={<h2 className="text-xl font-semibold text-gray-800">Galeri</h2>}>
+            <Head title="Galeri" />
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 {captures.data.length === 0 ? (
-                    <p className="text-sm text-gray-600">Belum ada foto gerak.</p>
+                    <p className="text-sm text-gray-600">Belum ada foto dari sensor PIR.</p>
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         {captures.data.map((capture) => (
@@ -98,7 +98,7 @@ export default function Index({ captures }) {
                                 <span className="block space-y-1 p-3 text-sm">
                                     <span className="block font-medium">{capture.device_name}</span>
                                     <span className="block text-gray-500">
-                                        {formatWhen(capture.captured_at)} · {capture.trigger} · {formatBytes(capture.bytes)}
+                                        {formatWhen(capture.captured_at)} · {formatBytes(capture.bytes)}
                                     </span>
                                 </span>
                             </button>
@@ -113,7 +113,7 @@ export default function Index({ captures }) {
                             <div>
                                 <DialogTitle className="text-lg font-semibold text-gray-900">{selected.device_name}</DialogTitle>
                                 <p className="mt-1 text-sm text-gray-500">
-                                    {formatWhen(selected.captured_at)} · {selected.trigger}
+                                    {formatWhen(selected.captured_at)}
                                 </p>
                             </div>
                             <button type="button" className="text-sm text-gray-500" onClick={() => setSelectedId(null)}>

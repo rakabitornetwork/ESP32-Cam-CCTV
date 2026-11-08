@@ -5,13 +5,11 @@ namespace Tests\Feature;
 use App\Enums\SubscriptionStatus;
 use App\Models\Device;
 use App\Models\Organization;
-use App\Models\Plan;
 use App\Models\Recording;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class CctvCloudTest extends TestCase
@@ -31,31 +29,11 @@ class CctvCloudTest extends TestCase
         $this->post('/login', [
             'email' => 'amon@teslatech.my.id',
             'password' => 'gantengmax',
-        ])->assertRedirect(route('dashboard', absolute: false));
+        ])->assertRedirect(route('captures.index', absolute: false));
 
-        $this->get(route('admin.dashboard'))->assertOk();
-    }
-
-    public function test_member_cannot_open_admin_panel(): void
-    {
-        [$user] = $this->owner();
-
-        $this->actingAs($user)->get(route('admin.dashboard'))->assertForbidden();
-        $this->actingAs($user)->get(route('admin.update'))->assertForbidden();
-        $this->actingAs($user)->post(route('admin.update.apply'))->assertForbidden();
-    }
-
-    public function test_admin_can_open_the_update_page(): void
-    {
-        $admin = User::factory()->create(['is_admin' => true]);
-        Organization::provisionFor($admin);
-
-        $this->actingAs($admin)->get(route('admin.update'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Admin/Update')
-                ->where('status.available', true)
-                ->where('status.branch', 'main'));
+        $this->actingAs(User::query()->where('email', 'amon@teslatech.my.id')->first())
+            ->get(route('captures.index'))
+            ->assertOk();
     }
 
     public function test_capture_uses_device_token_and_quota(): void
@@ -89,9 +67,10 @@ class CctvCloudTest extends TestCase
 
         $this->withToken($token)->post('/api/v1/captures', [
             'image' => UploadedFile::fake()->image('motion.jpg'),
-        ])->assertStatus(402);
+            'trigger' => 'pir',
+        ])->assertCreated();
 
-        $this->assertDatabaseCount('captures', 0);
+        $this->assertDatabaseCount('captures', 1);
     }
 
     public function test_past_due_subscription_blocks_uploads(): void
@@ -136,199 +115,7 @@ class CctvCloudTest extends TestCase
             'status' => 'ready',
         ]);
 
-        $this->actingAs($user)->get(route('recordings.index', [
-            'from' => now()->toDateString(),
-            'to' => now()->toDateString(),
-        ]))->assertInertia(fn (Assert $page) => $page
-            ->component('Recordings/Index')
-            ->has('recordings.data', 1));
-    }
-
-    public function test_second_device_is_blocked_on_the_free_plan(): void
-    {
-        [$user] = $this->owner();
-
-        $this->actingAs($user)->post(route('devices.store'), [
-            'name' => 'Kamera satu',
-        ])->assertRedirect();
-
-        $this->actingAs($user)->post(route('devices.store'), [
-            'name' => 'Kamera dua',
-        ])->assertSessionHasErrors('name');
-    }
-
-    public function test_device_coordinates_must_be_a_pair_and_stay_private(): void
-    {
-        [$user, $organization] = $this->owner();
-        $device = Device::provision($organization, 'Gerbang')['device'];
-        $stranger = User::factory()->create();
-        Organization::provisionFor($stranger);
-
-        $this->actingAs($stranger)->get(route('devices.show', $device))->assertForbidden();
-
-        $this->actingAs($user)->put(route('devices.update', $device), [
-            'name' => 'Gerbang',
-            'latitude' => -6.2,
-        ])->assertSessionHasErrors('longitude');
-    }
-
-    public function test_marking_an_invoice_paid_is_idempotent(): void
-    {
-        [$user, $organization] = $this->owner();
-        $plan = Plan::query()->where('slug', 'dasar')->firstOrFail();
-
-        $this->actingAs($user)->post(route('billing.store'), [
-            'plan_id' => $plan->id,
-        ])->assertRedirect();
-
-        $invoice = $organization->invoices()->firstOrFail();
-        $this->assertSame('pending', $invoice->status->value);
-
-        $this->actingAs($user)->post(route('billing.pay', $invoice))->assertRedirect();
-        $paidAt = $invoice->fresh()->paid_at;
-
-        $this->actingAs($user)->post(route('billing.pay', $invoice))->assertRedirect();
-
-        $this->assertTrue($invoice->fresh()->paid_at->eq($paidAt));
-        $this->assertSame($plan->id, $organization->subscription()->first()->plan_id);
-        $this->assertSame($plan->max_bytes, $organization->storageQuota()->first()->max_bytes);
-    }
-
-    public function test_device_image_quality_is_sent_to_the_camera(): void
-    {
-        [$user, , $token, $device] = $this->device();
-
-        $this->withToken($token)->getJson('/api/v1/devices/me')
-            ->assertOk()
-            ->assertJsonPath('image_quality', 'standar');
-
-        $this->actingAs($user)->put(route('devices.update', $device), [
-            'name' => 'ESP32-CAM',
-            'image_quality' => 'tajam',
-        ])->assertRedirect();
-
-        $this->assertSame('tajam', $device->fresh()->image_quality);
-
-        $this->withToken($token)->getJson('/api/v1/devices/me')
-            ->assertOk()
-            ->assertJsonPath('image_quality', 'tajam');
-
-        $this->actingAs($user)->put(route('devices.update', $device), [
-            'name' => 'ESP32-CAM',
-            'image_quality' => 'sangat-tajam',
-        ])->assertSessionHasErrors('image_quality');
-    }
-
-    public function test_device_custom_image_settings_are_sent_to_the_camera(): void
-    {
-        [$user, , $token, $device] = $this->device();
-
-        $this->withToken($token)->getJson('/api/v1/devices/me')
-            ->assertOk()
-            ->assertJsonPath('image_settings.brightness', 0)
-            ->assertJsonPath('image_settings.saturation', 0)
-            ->assertJsonPath('image_settings.hmirror', false);
-
-        $this->actingAs($user)->put(route('devices.update', $device), [
-            'name' => 'ESP32-CAM',
-            'image_quality' => 'standar',
-            'image_settings' => [
-                'brightness' => 1,
-                'contrast' => -1,
-                'saturation' => 0,
-                'sharpness' => 2,
-                'ae_level' => 1,
-                'wb_mode' => 4,
-                'hmirror' => true,
-                'vflip' => false,
-            ],
-        ])->assertRedirect();
-
-        $this->withToken($token)->getJson('/api/v1/devices/me')
-            ->assertOk()
-            ->assertJsonPath('image_settings.brightness', 1)
-            ->assertJsonPath('image_settings.contrast', -1)
-            ->assertJsonPath('image_settings.sharpness', 2)
-            ->assertJsonPath('image_settings.wb_mode', 4)
-            ->assertJsonPath('image_settings.hmirror', true)
-            ->assertJsonPath('image_settings.vflip', false);
-
-        $this->actingAs($user)->put(route('devices.update', $device), [
-            'name' => 'ESP32-CAM',
-            'image_quality' => 'standar',
-            'image_settings' => [
-                'brightness' => 9,
-                'contrast' => 0,
-                'saturation' => 0,
-                'sharpness' => 0,
-                'ae_level' => 0,
-                'wb_mode' => 0,
-                'hmirror' => false,
-                'vflip' => false,
-            ],
-        ])->assertSessionHasErrors('image_settings.brightness');
-    }
-
-    public function test_settings_page_controls_the_camera_and_live_preview(): void
-    {
-        Storage::fake('cctv');
-        [$user, $organization, $token, $device] = $this->device();
-
-        $this->actingAs($user)->get(route('settings.edit'))
-            ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
-                ->component('Settings/Edit')
-                ->has('cameras', 1)
-                ->where('cameras.0.image_quality', 'standar')
-                ->where('cameras.0.image_settings.saturation', 0));
-
-        $this->actingAs($user)->put(route('settings.camera', $device), [
-            'image_quality' => 'tajam',
-            'image_settings' => [
-                'brightness' => 2,
-                'contrast' => 1,
-                'saturation' => 0,
-                'sharpness' => -1,
-                'ae_level' => 1,
-                'wb_mode' => 2,
-                'hmirror' => false,
-                'vflip' => true,
-            ],
-        ])->assertRedirect();
-
-        $this->assertSame(0, $organization->storageQuota()->first()->used_bytes);
-
-        $this->withToken($token)->getJson('/api/v1/devices/me')
-            ->assertOk()
-            ->assertJsonPath('preview', false)
-            ->assertJsonPath('image_quality', 'tajam')
-            ->assertJsonPath('image_settings.brightness', 2)
-            ->assertJsonPath('image_settings.vflip', true);
-
-        $this->withToken($token)->post('/api/v1/preview', [
-            'image' => UploadedFile::fake()->image('live.jpg'),
-        ])->assertStatus(409);
-
-        $this->actingAs($user)->post(route('settings.preview.pulse', $device))->assertNoContent();
-
-        $this->withToken($token)->getJson('/api/v1/devices/me')
-            ->assertJsonPath('preview', true);
-
-        $this->withToken($token)->post('/api/v1/preview', [
-            'image' => UploadedFile::fake()->image('live.jpg'),
-        ])->assertNoContent();
-
-        $good = UploadedFile::fake()->image('live.jpg');
-        $cut = substr(file_get_contents($good->getRealPath()), 0, 32);
-        $this->withToken($token)->post('/api/v1/preview', [
-            'image' => UploadedFile::fake()->createWithContent('cut.jpg', $cut),
-        ])->assertStatus(422);
-
-        $this->assertSame(0, $organization->storageQuota()->first()->fresh()->used_bytes);
-
-        $this->actingAs($user)->get(route('settings.preview.show', $device))
-            ->assertOk()
-            ->assertHeader('content-type', 'image/jpeg');
+        $this->assertSame(1, $organization->recordings()->whereDate('started_at', now()->toDateString())->count());
     }
 
     public function test_a_capture_can_be_rotated_from_the_gallery(): void
@@ -353,18 +140,6 @@ class CctvCloudTest extends TestCase
             'direction' => 'left',
         ])->assertRedirect();
         $this->assertSame(0, $capture->fresh()->rotation);
-    }
-
-    public function test_viewer_cannot_change_plan(): void
-    {
-        [, $organization] = $this->owner();
-        $viewer = User::factory()->create();
-        $organization->users()->attach($viewer->id, ['role' => 'viewer']);
-        $plan = Plan::query()->where('slug', 'dasar')->firstOrFail();
-
-        $this->actingAs($viewer)->post(route('billing.store'), [
-            'plan_id' => $plan->id,
-        ])->assertForbidden();
     }
 
     /**

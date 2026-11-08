@@ -20,6 +20,7 @@ class CaptureController extends Controller
 
         $captures = $organization->captures()
             ->with('device:id,name')
+            ->where('trigger', 'pir')
             ->latest('captured_at')
             ->paginate(24)
             ->through(fn (Capture $capture) => [
