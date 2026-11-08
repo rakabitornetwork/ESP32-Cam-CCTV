@@ -226,7 +226,7 @@ class CctvCloudTest extends TestCase
         $this->withToken($token)->getJson('/api/v1/devices/me')
             ->assertOk()
             ->assertJsonPath('image_settings.brightness', 0)
-            ->assertJsonPath('image_settings.saturation', -1)
+            ->assertJsonPath('image_settings.saturation', 0)
             ->assertJsonPath('image_settings.hmirror', false);
 
         $this->actingAs($user)->put(route('devices.update', $device), [
@@ -280,7 +280,7 @@ class CctvCloudTest extends TestCase
                 ->component('Settings/Edit')
                 ->has('cameras', 1)
                 ->where('cameras.0.image_quality', 'standar')
-                ->where('cameras.0.image_settings.saturation', -1));
+                ->where('cameras.0.image_settings.saturation', 0));
 
         $this->actingAs($user)->put(route('settings.camera', $device), [
             'image_quality' => 'tajam',

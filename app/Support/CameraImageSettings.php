@@ -12,7 +12,7 @@ class CameraImageSettings
     public const DEFAULTS = [
         'brightness' => 0,
         'contrast' => 0,
-        'saturation' => -1,
+        'saturation' => 0,
         'sharpness' => 0,
         'ae_level' => 0,
         'wb_mode' => 0,

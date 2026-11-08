@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 const imageDefaults = {
     brightness: 0,
     contrast: 0,
-    saturation: -1,
+    saturation: 0,
     sharpness: 0,
     ae_level: 0,
     wb_mode: 0,
@@ -235,7 +235,7 @@ export default function Edit({ retainDays, maxRetainDays, canManage, cameras }) 
                             <div className="space-y-4 border-t border-gray-100 pt-4">
                                 <div>
                                     <h3 className="text-sm font-semibold text-gray-800">Gambar khusus</h3>
-                                    <p className="mt-1 text-xs text-gray-500">Geser dari −2 sampai 2. Perubahan dikirim ke kamera, dan hasilnya muncul di kamera langsung.</p>
+                                    <p className="mt-1 text-xs text-gray-500">Geser dari −2 sampai 2. Nilai 0 adalah netral. Gambar berikutnya memakai nilai yang baru disimpan.</p>
                                 </div>
                                 <RangeField id="brightness" label="Kecerahan" min={-2} max={2} value={camera.data.image_settings.brightness} disabled={!canManage} onChange={(value) => setSetting('brightness', value)} />
                                 <RangeField id="contrast" label="Kontras" min={-2} max={2} value={camera.data.image_settings.contrast} disabled={!canManage} onChange={(value) => setSetting('contrast', value)} />
