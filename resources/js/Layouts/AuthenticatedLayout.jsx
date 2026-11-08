@@ -12,6 +12,7 @@ import {
     LayoutDashboard,
     Map,
     Menu,
+    RefreshCw,
     Settings,
     Shield,
     X,
@@ -37,6 +38,14 @@ function isActive(name) {
         return route().current('devices.*') && !route().current('devices.map');
     }
 
+    if (name === 'admin.dashboard') {
+        return route().current('admin.dashboard');
+    }
+
+    if (name === 'admin.update') {
+        return route().current('admin.update') || route().current('admin.update.*');
+    }
+
     const prefix = name.split('.')[0];
 
     return route().current(name) || route().current(`${prefix}.*`);
@@ -46,7 +55,11 @@ export default function AuthenticatedLayout({ header, children }) {
     const user = usePage().props.auth.user;
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
     const items = user?.is_admin
-        ? [...links, { name: 'Panel Admin', route: 'admin.dashboard', icon: Shield }]
+        ? [
+            ...links,
+            { name: 'Panel Admin', route: 'admin.dashboard', icon: Shield },
+            { name: 'Pembaruan', route: 'admin.update', icon: RefreshCw },
+        ]
         : links;
 
     return (
