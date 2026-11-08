@@ -19,7 +19,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
     return (
         <div className="min-h-screen bg-gray-100">
-            <nav className="border-b border-gray-100 bg-white">
+            <nav className="relative border-b border-gray-100 bg-white">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
@@ -62,32 +62,52 @@ export default function AuthenticatedLayout({ header, children }) {
                         <div className="-me-2 flex items-center sm:hidden">
                             <button
                                 type="button"
+                                aria-expanded={showingNavigationDropdown}
+                                aria-controls="menu-ponsel"
                                 onClick={() => setShowingNavigationDropdown((open) => !open)}
                                 className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none"
                             >
-                                {showingNavigationDropdown ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                                <span className="relative block h-6 w-6">
+                                    <Menu
+                                        className={`absolute inset-0 h-6 w-6 transition-opacity duration-200 ${
+                                            showingNavigationDropdown ? 'opacity-0' : 'opacity-100'
+                                        }`}
+                                    />
+                                    <X
+                                        className={`absolute inset-0 h-6 w-6 transition-opacity duration-200 ${
+                                            showingNavigationDropdown ? 'opacity-100' : 'opacity-0'
+                                        }`}
+                                    />
+                                </span>
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
-                    <div className="space-y-1 pb-3 pt-2">
-                        {links.map((item) => (
-                            <ResponsiveNavLink key={item.route} href={route(item.route)} active={item.active}>
-                                {item.name}
-                            </ResponsiveNavLink>
-                        ))}
-                    </div>
-                    <div className="border-t border-gray-200 pb-1 pt-4">
-                        <div className="px-4">
-                            <div className="text-base font-medium text-gray-800">{user.name}</div>
-                            <div className="text-sm font-medium text-gray-500">{user.email}</div>
+                <div
+                    id="menu-ponsel"
+                    className={`absolute inset-x-0 top-full z-20 grid border-b border-gray-100 bg-white transition-[grid-template-rows] duration-300 ease-in-out sm:hidden ${
+                        showingNavigationDropdown ? 'pointer-events-auto grid-rows-[1fr]' : 'pointer-events-none grid-rows-[0fr]'
+                    }`}
+                >
+                    <div className="overflow-hidden" inert={showingNavigationDropdown ? undefined : true}>
+                        <div className="space-y-1 pb-3 pt-2">
+                            {links.map((item) => (
+                                <ResponsiveNavLink key={item.route} href={route(item.route)} active={item.active}>
+                                    {item.name}
+                                </ResponsiveNavLink>
+                            ))}
                         </div>
-                        <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink method="post" href={route('logout')} as="button">
-                                Keluar
-                            </ResponsiveNavLink>
+                        <div className="border-t border-gray-200 pb-1 pt-4">
+                            <div className="px-4">
+                                <div className="text-base font-medium text-gray-800">{user.name}</div>
+                                <div className="text-sm font-medium text-gray-500">{user.email}</div>
+                            </div>
+                            <div className="mt-3 space-y-1">
+                                <ResponsiveNavLink method="post" href={route('logout')} as="button">
+                                    Keluar
+                                </ResponsiveNavLink>
+                            </div>
                         </div>
                     </div>
                 </div>
