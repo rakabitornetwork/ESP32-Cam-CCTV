@@ -39,7 +39,18 @@ class Device extends Model
             'pir_armed' => 'boolean',
             'rssi' => 'integer',
             'image_settings' => 'array',
+            'preview_until' => 'datetime',
         ];
+    }
+
+    public function previewActive(): bool
+    {
+        return $this->preview_until !== null && $this->preview_until->isFuture();
+    }
+
+    public function previewPath(): string
+    {
+        return 'preview/'.$this->organization_id.'/'.$this->id.'.jpg';
     }
 
     /**

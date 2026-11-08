@@ -42,6 +42,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('settings', [SettingsController::class, 'edit'])->name('settings.edit');
     Route::put('settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::put('settings/camera/{device}', [SettingsController::class, 'updateCamera'])->name('settings.camera');
+    Route::post('settings/preview/{device}', [SettingsController::class, 'pulsePreview'])->name('settings.preview.pulse');
+    Route::get('settings/preview/{device}', [SettingsController::class, 'showPreview'])->name('settings.preview.show');
 
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/', AdminDashboardController::class)->name('dashboard');

@@ -1,4 +1,3 @@
-import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -9,55 +8,13 @@ import { Suspense, lazy } from 'react';
 
 const LazyMap = lazy(() => import('@/Components/DeviceMap'));
 
-const imageDefaults = {
-    brightness: 0,
-    contrast: 0,
-    saturation: -1,
-    sharpness: 0,
-    ae_level: 0,
-    wb_mode: 0,
-    hmirror: false,
-    vflip: false,
-};
-
-function RangeField({ id, label, min, max, value, onChange }) {
-    return (
-        <div>
-            <div className="flex items-center justify-between">
-                <InputLabel htmlFor={id} value={label} />
-                <span className="text-sm tabular-nums text-gray-700">{value}</span>
-            </div>
-            <input
-                id={id}
-                type="range"
-                min={min}
-                max={max}
-                step="1"
-                value={value}
-                onChange={(event) => onChange(Number(event.target.value))}
-                className="mt-2 w-full accent-brand-600"
-            />
-        </div>
-    );
-}
-
 export default function Edit({ device }) {
-    const settings = { ...imageDefaults, ...(device.image_settings || {}) };
     const { data, setData, put, processing, errors } = useForm({
         name: device.name,
         location: device.location || '',
         latitude: device.latitude ?? '',
         longitude: device.longitude ?? '',
-        image_quality: device.image_quality || 'standar',
-        image_settings: settings,
     });
-
-    const setSetting = (key, value) => {
-        setData((current) => ({
-            ...current,
-            image_settings: { ...current.image_settings, [key]: value },
-        }));
-    };
 
     const submit = (event) => {
         event.preventDefault();
@@ -89,56 +46,6 @@ export default function Edit({ device }) {
                         </div>
                     </div>
                     <InputError message={errors.latitude || errors.longitude} className="mt-2" />
-                    <div>
-                        <InputLabel htmlFor="image_quality" value="Kualitas gambar" />
-                        <select
-                            id="image_quality"
-                            value={data.image_quality}
-                            onChange={(event) => setData('image_quality', event.target.value)}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
-                        >
-                            <option value="hemat">Hemat — berkas lebih kecil</option>
-                            <option value="standar">Standar</option>
-                            <option value="tajam">Tajam — lebih detail</option>
-                        </select>
-                        <p className="mt-2 text-xs text-gray-500">Menentukan ukuran foto. Kamera memakai pilihan ini tanpa flash ulang.</p>
-                        <InputError message={errors.image_quality} className="mt-2" />
-                    </div>
-                    <div className="space-y-4 border-t border-gray-100 pt-4">
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-800">Gambar khusus</h3>
-                            <p className="mt-1 text-xs text-gray-500">Geser dari −2 sampai 2. Kamera mengambil nilai ini dalam waktu sekitar 30 detik, lalu foto berikutnya memakai pengaturan yang sudah stabil.</p>
-                        </div>
-                        <RangeField id="brightness" label="Kecerahan" min={-2} max={2} value={data.image_settings.brightness} onChange={(value) => setSetting('brightness', value)} />
-                        <RangeField id="contrast" label="Kontras" min={-2} max={2} value={data.image_settings.contrast} onChange={(value) => setSetting('contrast', value)} />
-                        <RangeField id="saturation" label="Saturasi warna" min={-2} max={2} value={data.image_settings.saturation} onChange={(value) => setSetting('saturation', value)} />
-                        <RangeField id="sharpness" label="Ketajaman" min={-2} max={2} value={data.image_settings.sharpness} onChange={(value) => setSetting('sharpness', value)} />
-                        <RangeField id="ae_level" label="Kompensasi cahaya" min={-2} max={2} value={data.image_settings.ae_level} onChange={(value) => setSetting('ae_level', value)} />
-                        <div>
-                            <InputLabel htmlFor="wb_mode" value="Keseimbangan putih" />
-                            <select
-                                id="wb_mode"
-                                value={data.image_settings.wb_mode}
-                                onChange={(event) => setSetting('wb_mode', Number(event.target.value))}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500"
-                            >
-                                <option value={0}>Otomatis</option>
-                                <option value={1}>Cerah</option>
-                                <option value={2}>Mendung</option>
-                                <option value={3}>Kantor</option>
-                                <option value={4}>Rumah</option>
-                            </select>
-                        </div>
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <Checkbox checked={data.image_settings.hmirror} onChange={(event) => setSetting('hmirror', event.target.checked)} />
-                            Cermin kiri-kanan
-                        </label>
-                        <label className="flex items-center gap-2 text-sm text-gray-700">
-                            <Checkbox checked={data.image_settings.vflip} onChange={(event) => setSetting('vflip', event.target.checked)} />
-                            Balik atas-bawah
-                        </label>
-                        <InputError message={errors['image_settings.brightness'] || errors['image_settings.contrast'] || errors.image_settings} className="mt-2" />
-                    </div>
                     <PrimaryButton disabled={processing}>Simpan</PrimaryButton>
                 </div>
                 <Suspense fallback={<div className="h-112 animate-pulse rounded-lg bg-gray-200" />}>

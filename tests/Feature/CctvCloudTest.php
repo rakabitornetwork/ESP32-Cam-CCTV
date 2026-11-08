@@ -269,6 +269,62 @@ class CctvCloudTest extends TestCase
         ])->assertSessionHasErrors('image_settings.brightness');
     }
 
+    public function test_settings_page_controls_the_camera_and_live_preview(): void
+    {
+        Storage::fake('cctv');
+        [$user, $organization, $token, $device] = $this->device();
+
+        $this->actingAs($user)->get(route('settings.edit'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('Settings/Edit')
+                ->has('cameras', 1)
+                ->where('cameras.0.image_quality', 'standar')
+                ->where('cameras.0.image_settings.saturation', -1));
+
+        $this->actingAs($user)->put(route('settings.camera', $device), [
+            'image_quality' => 'tajam',
+            'image_settings' => [
+                'brightness' => 2,
+                'contrast' => 1,
+                'saturation' => 0,
+                'sharpness' => -1,
+                'ae_level' => 1,
+                'wb_mode' => 2,
+                'hmirror' => false,
+                'vflip' => true,
+            ],
+        ])->assertRedirect();
+
+        $this->assertSame(0, $organization->storageQuota()->first()->used_bytes);
+
+        $this->withToken($token)->getJson('/api/v1/devices/me')
+            ->assertOk()
+            ->assertJsonPath('preview', false)
+            ->assertJsonPath('image_quality', 'tajam')
+            ->assertJsonPath('image_settings.brightness', 2)
+            ->assertJsonPath('image_settings.vflip', true);
+
+        $this->withToken($token)->post('/api/v1/preview', [
+            'image' => UploadedFile::fake()->image('live.jpg'),
+        ])->assertStatus(409);
+
+        $this->actingAs($user)->post(route('settings.preview.pulse', $device))->assertNoContent();
+
+        $this->withToken($token)->getJson('/api/v1/devices/me')
+            ->assertJsonPath('preview', true);
+
+        $this->withToken($token)->post('/api/v1/preview', [
+            'image' => UploadedFile::fake()->image('live.jpg'),
+        ])->assertNoContent();
+
+        $this->assertSame(0, $organization->storageQuota()->first()->fresh()->used_bytes);
+
+        $this->actingAs($user)->get(route('settings.preview.show', $device))
+            ->assertOk()
+            ->assertHeader('content-type', 'image/jpeg');
+    }
+
     public function test_viewer_cannot_change_plan(): void
     {
         [, $organization] = $this->owner();
