@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Capture;
+use App\Models\Organization;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -47,6 +48,7 @@ class CaptureController extends Controller
                 'name' => $device->name,
             ])->values(),
             'camera' => $cameraId,
+            'canDelete' => $request->user()->canManageOrganization($organization->id),
         ]);
     }
 
@@ -78,21 +80,64 @@ class CaptureController extends Controller
         return back();
     }
 
-    public function destroy(Capture $capture): RedirectResponse
+    public function destroy(Request $request, Capture $capture): RedirectResponse
     {
         $this->authorize('delete', $capture);
         $bytes = (int) $capture->bytes;
         $organization = $capture->organization;
         $capture->deleteStoredFile();
         $capture->delete();
-        $quota = $organization->storageQuota;
+        $this->releaseQuota($organization, $bytes);
 
-        if ($quota !== null) {
-            $quota->forceFill([
-                'used_bytes' => max(0, $quota->used_bytes - $bytes),
-            ])->save();
+        return redirect()->route('captures.index', $this->cameraQuery($request));
+    }
+
+    public function clear(Request $request): RedirectResponse
+    {
+        $this->authorize('clear', Capture::class);
+        $organization = $request->user()->currentOrganization();
+        abort_if($organization === null, 403);
+        $cameraId = $request->integer('kamera') ?: null;
+
+        if ($cameraId !== null && ! $organization->devices()->whereKey($cameraId)->exists()) {
+            $cameraId = null;
         }
 
-        return redirect()->route('captures.index');
+        $freed = 0;
+        $organization->captures()
+            ->where('trigger', 'pir')
+            ->when($cameraId, fn ($query) => $query->where('device_id', $cameraId))
+            ->chunkById(100, function ($captures) use (&$freed): void {
+                foreach ($captures as $capture) {
+                    $freed += (int) $capture->bytes;
+                    $capture->deleteStoredFile();
+                    $capture->delete();
+                }
+            });
+
+        $this->releaseQuota($organization, $freed);
+
+        return redirect()->route('captures.index', $cameraId ? ['kamera' => $cameraId] : []);
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function cameraQuery(Request $request): array
+    {
+        $cameraId = $request->integer('kamera') ?: null;
+
+        return $cameraId ? ['kamera' => $cameraId] : [];
+    }
+
+    private function releaseQuota(Organization $organization, int $bytes): void
+    {
+        $quota = $organization->storageQuota()->first();
+
+        if ($quota !== null && $bytes > 0) {
+            $quota->forceFill([
+                'used_bytes' => max(0, (int) $quota->used_bytes - $bytes),
+            ])->save();
+        }
     }
 }

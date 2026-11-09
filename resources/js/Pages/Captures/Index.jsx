@@ -1,3 +1,4 @@
+import DangerButton from '@/Components/DangerButton';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
@@ -58,9 +59,12 @@ function CapturePhoto({ src, alt, rotation, variant }) {
     );
 }
 
-export default function Index({ captures, cameras = [], camera }) {
+export default function Index({ captures, cameras = [], camera, canDelete = false }) {
     const [selectedId, setSelectedId] = useState(null);
     const [turning, setTurning] = useState(false);
+    const [deleting, setDeleting] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const [confirmingClear, setConfirmingClear] = useState(false);
     const [cameraOpen, setCameraOpen] = useState(false);
     const cameraMenu = useRef(null);
     const selected = captures.data.find((capture) => capture.id === selectedId) || null;
@@ -112,11 +116,38 @@ export default function Index({ captures, cameras = [], camera }) {
         });
     };
 
+    const removeSelected = () => {
+        if (!selected) {
+            return;
+        }
+
+        setDeleting(true);
+        router.delete(route('captures.destroy', selected.id), {
+            data: camera ? { kamera: camera } : {},
+            preserveScroll: true,
+            onSuccess: () => {
+                setSelectedId(null);
+                setConfirmingDelete(false);
+            },
+            onFinish: () => setDeleting(false),
+        });
+    };
+
+    const clearGallery = () => {
+        setDeleting(true);
+        router.delete(route('captures.clear'), {
+            data: camera ? { kamera: camera } : {},
+            preserveScroll: true,
+            onSuccess: () => setConfirmingClear(false),
+            onFinish: () => setDeleting(false),
+        });
+    };
+
     return (
         <AuthenticatedLayout header={<h2 className="text-xl font-semibold text-gray-800">Galeri</h2>}>
             <Head title="Galeri" />
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                <div className="mb-6 flex items-center gap-3">
+                <div className="mb-6 flex flex-wrap items-center gap-3">
                     <label id="kamera-label" className="text-sm text-gray-500">
                         Kamera
                     </label>
@@ -167,6 +198,15 @@ export default function Index({ captures, cameras = [], camera }) {
                             </div>
                         </div>
                     </div>
+                    {canDelete && captures.total > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setConfirmingClear(true)}
+                            className="rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700"
+                        >
+                            Hapus semua
+                        </button>
+                    )}
                 </div>
                 {captures.data.length === 0 ? (
                     <p className="text-sm text-gray-600">
@@ -198,7 +238,7 @@ export default function Index({ captures, cameras = [], camera }) {
                     </div>
                 )}
             </div>
-            <Modal show={selected !== null} maxWidth="4xl" onClose={() => setSelectedId(null)}>
+            <Modal show={selected !== null && !confirmingDelete} maxWidth="4xl" onClose={() => setSelectedId(null)}>
                 {selected && (
                     <div>
                         <div className="flex items-start justify-between gap-4 px-6 pt-5">
@@ -219,7 +259,12 @@ export default function Index({ captures, cameras = [], camera }) {
                                 rotation={selected.rotation}
                             />
                         </div>
-                        <div className="relative z-10 flex justify-end gap-3 bg-white px-6 py-4">
+                        <div className="relative z-10 flex flex-wrap items-center justify-end gap-3 bg-white px-6 py-4">
+                            {canDelete && (
+                                <DangerButton className="me-auto" disabled={turning} onClick={() => setConfirmingDelete(true)}>
+                                    Hapus
+                                </DangerButton>
+                            )}
                             <SecondaryButton disabled={turning} onClick={() => rotate('left')}>
                                 Putar kiri
                             </SecondaryButton>
@@ -229,6 +274,40 @@ export default function Index({ captures, cameras = [], camera }) {
                         </div>
                     </div>
                 )}
+            </Modal>
+            <Modal show={confirmingDelete} onClose={() => !deleting && setConfirmingDelete(false)}>
+                <div className="p-6">
+                    <DialogTitle className="text-lg font-medium text-gray-900">Hapus foto ini?</DialogTitle>
+                    <p className="mt-1 text-sm text-gray-600">Berkas foto akan dihapus permanen dari galeri.</p>
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton disabled={deleting} onClick={() => setConfirmingDelete(false)}>
+                            Batal
+                        </SecondaryButton>
+                        <DangerButton disabled={deleting} onClick={removeSelected}>
+                            Hapus
+                        </DangerButton>
+                    </div>
+                </div>
+            </Modal>
+            <Modal show={confirmingClear} onClose={() => !deleting && setConfirmingClear(false)}>
+                <div className="p-6">
+                    <DialogTitle className="text-lg font-medium text-gray-900">
+                        {camera ? `Hapus semua foto dari ${cameraName}?` : 'Hapus semua foto di galeri?'}
+                    </DialogTitle>
+                    <p className="mt-1 text-sm text-gray-600">
+                        {camera
+                            ? 'Hanya foto dari kamera yang sedang dipilih yang dihapus. Tindakan ini tidak bisa dibatalkan.'
+                            : 'Seluruh foto di galeri akan dihapus. Tindakan ini tidak bisa dibatalkan.'}
+                    </p>
+                    <div className="mt-6 flex justify-end gap-3">
+                        <SecondaryButton disabled={deleting} onClick={() => setConfirmingClear(false)}>
+                            Batal
+                        </SecondaryButton>
+                        <DangerButton disabled={deleting} onClick={clearGallery}>
+                            Hapus semua
+                        </DangerButton>
+                    </div>
+                </div>
             </Modal>
         </AuthenticatedLayout>
     );

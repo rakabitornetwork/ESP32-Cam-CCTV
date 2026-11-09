@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Enums\OrganizationRole;
 use App\Enums\SubscriptionStatus;
+use App\Models\Capture;
 use App\Models\Device;
 use App\Models\Organization;
 use App\Models\Recording;
@@ -140,6 +142,58 @@ class CctvCloudTest extends TestCase
             'direction' => 'left',
         ])->assertRedirect();
         $this->assertSame(0, $capture->fresh()->rotation);
+    }
+
+    public function test_gallery_photos_can_be_deleted(): void
+    {
+        Storage::fake('cctv');
+        [$user, $organization] = $this->owner();
+        $kept = Device::provision($organization, 'Teras')['device'];
+        $removed = Device::provision($organization, 'Gudang')['device'];
+        $organization->storageQuota()->update(['used_bytes' => 350]);
+
+        $stay = $this->photo($organization, $kept, 'a.jpg', 100);
+        $gone = $this->photo($organization, $removed, 'b.jpg', 200);
+        $alsoGone = $this->photo($organization, $removed, 'c.jpg', 50);
+
+        $viewer = User::factory()->create();
+        $organization->users()->attach($viewer->id, ['role' => OrganizationRole::Viewer->value]);
+
+        $this->actingAs($viewer)->delete(route('captures.destroy', $gone))->assertForbidden();
+        $this->actingAs($viewer)->delete(route('captures.clear'))->assertForbidden();
+
+        $this->actingAs($user)->delete(route('captures.destroy', $gone))->assertRedirect(route('captures.index'));
+        Storage::disk('cctv')->assertMissing('b.jpg');
+        $this->assertModelMissing($gone);
+        $this->assertSame(150, $organization->storageQuota()->first()->used_bytes);
+
+        $this->actingAs($user)->delete(route('captures.clear'), ['kamera' => $removed->id])
+            ->assertRedirect(route('captures.index', ['kamera' => $removed->id]));
+
+        Storage::disk('cctv')->assertMissing('c.jpg');
+        Storage::disk('cctv')->assertExists('a.jpg');
+        $this->assertModelMissing($alsoGone);
+        $this->assertNotNull($stay->fresh());
+        $this->assertSame(100, $organization->storageQuota()->first()->used_bytes);
+
+        $this->actingAs($user)->delete(route('captures.clear'))->assertRedirect(route('captures.index'));
+        Storage::disk('cctv')->assertMissing('a.jpg');
+        $this->assertSame(0, $organization->captures()->count());
+        $this->assertSame(0, $organization->storageQuota()->first()->used_bytes);
+    }
+
+    private function photo(Organization $organization, Device $device, string $path, int $bytes): Capture
+    {
+        Storage::disk('cctv')->put($path, 'foto');
+
+        return $organization->captures()->create([
+            'device_id' => $device->id,
+            'trigger' => 'pir',
+            'bytes' => $bytes,
+            'disk' => 'cctv',
+            'path' => $path,
+            'captured_at' => now(),
+        ]);
     }
 
     /**

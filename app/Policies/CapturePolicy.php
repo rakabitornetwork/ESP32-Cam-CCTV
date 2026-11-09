@@ -26,4 +26,11 @@ class CapturePolicy
     {
         return $user->canManageOrganization($capture->organization_id);
     }
+
+    public function clear(User $user): bool
+    {
+        $organization = $user->currentOrganization();
+
+        return $organization !== null && $user->canManageOrganization($organization->id);
+    }
 }

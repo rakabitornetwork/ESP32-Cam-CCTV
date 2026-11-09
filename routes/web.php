@@ -20,6 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('kamera/{device}', [DeviceController::class, 'destroy'])->name('devices.destroy');
 
     Route::get('captures', [CaptureController::class, 'index'])->name('captures.index');
+    Route::delete('captures', [CaptureController::class, 'clear'])->name('captures.clear');
     Route::get('captures/{capture}/stream', [CaptureController::class, 'stream'])->name('captures.stream');
     Route::patch('captures/{capture}/rotation', [CaptureController::class, 'rotate'])->name('captures.rotate');
     Route::delete('captures/{capture}', [CaptureController::class, 'destroy'])->name('captures.destroy');
