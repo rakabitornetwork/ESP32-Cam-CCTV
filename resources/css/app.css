@@ -20,6 +20,42 @@ html {
     background-image: linear-gradient(105deg, #042f2e 0%, #0f4c48 46%, #0f766e 100%);
 }
 
+.stat-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    color: #fff;
+    box-shadow: 0 12px 28px -16px rgb(15 23 42 / 0.55);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(80% 90% at 100% 0%, rgb(255 255 255 / 0.22), transparent 58%);
+    pointer-events: none;
+}
+
+.stat-card--cameras {
+    background-image: linear-gradient(128deg, #042f2e 0%, #0f766e 62%, #14b8a6 100%);
+}
+
+.stat-card--today {
+    background-image: linear-gradient(128deg, #0c4a6e 0%, #0369a1 58%, #38bdf8 100%);
+}
+
+.stat-card--stored {
+    background-image: linear-gradient(128deg, #312e81 0%, #4f46e5 58%, #818cf8 100%);
+}
+
+a.stat-card {
+    transition: filter 150ms ease, transform 150ms ease;
+}
+
+a.stat-card:hover {
+    filter: brightness(1.06);
+}
+
 .rdp-root {
     --rdp-accent-color: #0f766e;
     --rdp-accent-background-color: #ccfbf1;

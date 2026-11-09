@@ -74,7 +74,7 @@ const Content = ({
                 >
                     <div
                         className={
-                            `rounded-md ring-1 ring-black ring-opacity-5 ` +
+                            `overflow-hidden rounded-md ring-1 ring-black ring-opacity-5 ` +
                             contentClasses
                         }
                     >
@@ -86,12 +86,18 @@ const Content = ({
     );
 };
 
-const DropdownLink = ({ className = '', children, ...props }) => {
+const DropdownLink = ({ className = '', danger = false, children, ...props }) => {
+    const tone = danger
+        ? 'border-0 bg-red-600 text-white hover:bg-red-700 focus:bg-red-700'
+        : 'text-gray-700 hover:bg-gray-100 focus:bg-gray-100';
+
     return (
         <Link
             {...props}
             className={
-                'block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 transition duration-150 ease-in-out hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ' +
+                'block w-full px-4 py-2 text-start text-sm leading-5 transition duration-150 ease-in-out focus:outline-none ' +
+                tone +
+                ' ' +
                 className
             }
         >

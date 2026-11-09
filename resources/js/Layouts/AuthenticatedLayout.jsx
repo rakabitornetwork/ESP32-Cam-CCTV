@@ -52,8 +52,9 @@ export default function AuthenticatedLayout({ header, children }) {
                                     </span>
                                 </Dropdown.Trigger>
 
-                                <Dropdown.Content>
-                                    <Dropdown.Link href={route('logout')} method="post" as="button">
+                                <Dropdown.Content contentClasses="bg-white">
+                                    <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
+                                    <Dropdown.Link href={route('logout')} method="post" as="button" danger>
                                         Keluar
                                     </Dropdown.Link>
                                 </Dropdown.Content>
@@ -87,7 +88,7 @@ export default function AuthenticatedLayout({ header, children }) {
 
                 <div
                     id="menu-ponsel"
-                    className={`absolute inset-x-0 top-full z-20 grid border-b border-teal-950/40 bg-[#06302e] transition-[grid-template-rows] duration-300 ease-in-out sm:hidden ${
+                    className={`absolute inset-x-0 top-full z-20 grid bg-[#06302e] transition-[grid-template-rows] duration-300 ease-in-out sm:hidden ${
                         showingNavigationDropdown ? 'pointer-events-auto grid-rows-[1fr]' : 'pointer-events-none grid-rows-[0fr]'
                     }`}
                 >
@@ -99,15 +100,18 @@ export default function AuthenticatedLayout({ header, children }) {
                                 </ResponsiveNavLink>
                             ))}
                         </div>
-                        <div className="border-t border-white/15 pb-1 pt-4">
+                        <div className="border-t border-white/15 pt-4">
                             <div className="px-4">
                                 <div className="text-base font-medium text-white">{user.name}</div>
                                 <div className="text-sm font-medium text-teal-100">{user.email}</div>
                             </div>
-                            <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink method="post" href={route('logout')} as="button" onDark>
-                                Keluar
-                            </ResponsiveNavLink>
+                            <div className="mt-3">
+                                <ResponsiveNavLink href={route('profile.edit')} active={route().current('profile.edit')} onDark>
+                                    Profile
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink method="post" href={route('logout')} as="button" danger>
+                                    Keluar
+                                </ResponsiveNavLink>
                             </div>
                         </div>
                     </div>

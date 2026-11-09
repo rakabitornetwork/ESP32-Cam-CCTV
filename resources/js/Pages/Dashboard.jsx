@@ -2,21 +2,29 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatBytes, formatWhen } from '@/lib/format';
 import { Head, Link } from '@inertiajs/react';
 
-function Widget({ label, value, detail, href }) {
+const cardTones = {
+    cameras: 'stat-card stat-card--cameras',
+    today: 'stat-card stat-card--today',
+    stored: 'stat-card stat-card--stored',
+};
+
+function Widget({ label, value, detail, href, tone = 'cameras' }) {
     const body = (
-        <>
-            <div className="text-sm text-gray-500">{label}</div>
-            <div className="mt-2 text-3xl font-semibold text-gray-900">{value}</div>
-            {detail && <div className="mt-1 text-sm text-gray-500">{detail}</div>}
-        </>
+        <span className="relative z-10 block">
+            <span className="block text-sm text-white/80">{label}</span>
+            <span className="mt-2 block text-3xl font-semibold tracking-tight text-white">{value}</span>
+            {detail && <span className="mt-1 block text-sm text-white/75">{detail}</span>}
+        </span>
     );
 
+    const className = `${cardTones[tone]} block px-5 py-4`;
+
     if (!href) {
-        return <section className="border border-gray-200 bg-white px-5 py-4">{body}</section>;
+        return <section className={className}>{body}</section>;
     }
 
     return (
-        <Link href={href} className="border border-gray-200 bg-white px-5 py-4 hover:border-gray-300">
+        <Link href={href} className={className}>
             {body}
         </Link>
     );
@@ -44,13 +52,14 @@ export default function Dashboard({ summary, cameras, recent }) {
             <Head title="Dasbor" />
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="grid gap-4 sm:grid-cols-3">
-                    <Widget label="Kamera" value={summary.cameras} href={route('devices.index')} />
-                    <Widget label="Foto hari ini" value={summary.photos_today} />
+                    <Widget label="Kamera" value={summary.cameras} href={route('devices.index')} tone="cameras" />
+                    <Widget label="Foto hari ini" value={summary.photos_today} tone="today" />
                     <Widget
                         label="Foto tersimpan"
                         value={summary.photos}
                         detail={formatBytes(summary.storage_bytes)}
                         href={route('captures.index')}
+                        tone="stored"
                     />
                 </div>
 
